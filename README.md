@@ -1,6 +1,6 @@
 # SDカード
 
-1. Raspberry Pi ImagerでRaspberry Pi OS Lite (64-bit,bullseye)をMicro SDに書き込む。Imagerの設定でユーザ名**pi**とパスワードを予め設定すること。
+1. Raspberry Pi ImagerでRaspberry Pi OS Lite (64-bit,**bullseye**)をMicro SDに書き込む。Imagerの設定でユーザ名**pi**とパスワードを予め設定すること。
 2. Micro SDに作成された"bootfs"ドライブ直下に`ssh`という名前のファイルを配置してSSHを有効化する。
 3. OS起動後、本レポジトリの`ros2_ws`及び`service`ディレクトリをホームディレクトリ(`/home/pi/`)にコピーする。
 
@@ -234,6 +234,12 @@ echo "source ~/ros2_ws/install/setup.bash" >> ~/.bashrc
 ## ROS2ノードの実行
 ```bash
 ros2 launch scramble_auto_robot hardware.launch.py
+```
+- この段階で下記のようなエラーが出る場合は，Raspberry piのOSのバージョンが誤っているためSDカード作成からやり直す必要がある．OSのバージョンはbullseyeを指定すること（何も指定しないと最新版のbookwormがインストールされる）
+```[INFO] [launch]: All log files can be found below /home/pi/.ros/log/2024-02-11-18-34-23-302048-raspberrypi-2602
+[INFO] [launch]: Default logging verbosity is set to INFO
+[ERROR] [launch]: Caught exception in launch (see debug for traceback): Caught exception when trying to load file of format [py]: No module named 'rclpy._rclpy_pybind11'
+The C extension '/opt/ros/humble/lib/python3.9/site-packages/_rclpy_pybind11.cpython-311-aarch64-linux-gnu.so' isn't present on the system. Please refer to 'https://docs.ros.org/en/humble/Guides/Installation-Troubleshooting.html#import-failing-without-library-present-on-the-system' for possible solutions
 ```
 
 ## 確認
