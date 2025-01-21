@@ -3,6 +3,7 @@
 SCRIPTDIR=/home/pi/service/
 ENVFILE=/home/pi/ros2_ws/install/local_setup.bash
 
+sudo /usr/sbin/ip link set lo multicast on
 echo "Loading ROS2 Env..."
 source /opt/ros/humble/setup.bash
 source ${ENVFILE}
