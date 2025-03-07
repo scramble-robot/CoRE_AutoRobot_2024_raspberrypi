@@ -1,5 +1,5 @@
 import rclpy
-from std_msgs.msg import Float64, Int64
+from std_msgs.msg import Float64, Int64, Bool
 
 from threading import Thread
 import queue
@@ -56,9 +56,11 @@ def parse_gm6020_data(msg: can.Message):
 exit_flag = False
 c620_msg_count = [0, 0]
 gm6020_msg_count = [0, 0]
+interrupt_datas = [True, True, True, True]
 
 def can_task(c620_queues, c620_rpm_publishes, gm6020_queues, gm6020_deg_publishes):
     global exit_flag
+    global interrupt_datas
     bus = can.interface.Bus(bustype="socketcan", channel="can0", bitrate=1000000)
     
     def notifier(msg: can.Message) -> None:
@@ -96,14 +98,37 @@ def can_task(c620_queues, c620_rpm_publishes, gm6020_queues, gm6020_deg_publishe
         #GM6020
         for i, que in enumerate(gm6020_queues):
             if not que.empty():
-                gm6020_target_voltage[i] = que.get(block=False)
+                target_voltage = que.get(block=False)
+                if i == 0:
+                    if (target_voltage < 0 and interrupt_datas[3]) or (target_voltage > 0 and interrupt_datas[2]):
+                        target_voltage = 0
+                elif i == 1:
+                    if (target_voltage < 0 and interrupt_datas[0]) or (target_voltage > 0 and interrupt_datas[1]):
+                        target_voltage = 0
+                gm6020_target_voltage[i] = target_voltage
         gm6020_set_volt(bus, gm6020_target_voltage)
-        
+     
         time.sleep(0.001)
     
     notifier.stop()
     bus.shutdown()
-    
+
+def callback0(msg):
+    global interrupt_datas
+    interrupt_datas[0] = msg.data
+
+def callback1(msg):
+    global interrupt_datas
+    interrupt_datas[1] = msg.data
+
+def callback2(msg):
+    global interrupt_datas
+    interrupt_datas[2] = msg.data
+
+def callback3(msg):
+    global interrupt_datas
+    interrupt_datas[3] = msg.data
+
 def main(args=None):
     rclpy.init(args=args)
 
@@ -131,6 +156,11 @@ def main(args=None):
     gm6020_s0 = node.create_subscription(Int64, f'~/gm6020_0/target_volt', lambda msg: gm6020_queues[0].put(msg.data), 10)
     gm6020_s1 = node.create_subscription(Int64, f'~/gm6020_1/target_volt', lambda msg: gm6020_queues[1].put(msg.data), 10)
     
+    interrupter_s0 = node.create_subscription(Bool, f'/gpio_node/in0', callback0, 10)
+    interrupter_s1 = node.create_subscription(Bool, f'/gpio_node/in1', callback1, 10)
+    interrupter_s2 = node.create_subscription(Bool, f'/gpio_node/in2', callback2, 10)
+    interrupter_s3 = node.create_subscription(Bool, f'/gpio_node/in3', callback3, 10)
+
     task = Thread(target=can_task, args=[c620_queues, c620_rpm_publishes, gm6020_queues, gm6020_deg_publishes])
     task.start()
 
