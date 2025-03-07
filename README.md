@@ -186,7 +186,7 @@ sudo systemctl enable pigpiod
 ```python
 import pigpio
 
-output_pin = 17
+output_pin = 12 # 12 or 13
 
 
 def setServoDegree(pi, output_pin, degree):
