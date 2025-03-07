@@ -1,9 +1,10 @@
 [Unit]
 Description=ROS2 launch
-After=local-fs.target
+After=local-fs.target network-online.target
 ConditionPathExists=/home/pi/service
 
 [Service]
+ExecStartPre=/bin/sleep 5
 ExecStart=/home/pi/service/ros2_launch.sh
 ExecStop=/bin/kill ${MAINPID}
 Restart=on-failure
